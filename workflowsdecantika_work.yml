@@ -1,0 +1,35 @@
+name: Update Decantika RSS Feed
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # daily at 7:00 AM Eastern (11:00 UTC during EDT; adjust to "0 12 * * *" for EST/winter)
+  workflow_dispatch: {}    # allows manual "Run workflow" button
+
+permissions:
+  contents: write
+
+jobs:
+  update-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run feed generator
+        run: python feed_decantika.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add feed_decantika.xml
+          git diff --quiet --cached || git commit -m "Update Decantika feed [skip ci]"
+          git push
